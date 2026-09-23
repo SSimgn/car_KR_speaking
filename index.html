@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>말씨와 논리 (차량 핸즈프리 섀도잉)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --highlight: #facc15;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; display: flex; flex-direction: column; min-height: 100vh; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
+    select { background: var(--card-bg); color: var(--text); border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; font-size: 1rem; }
+
+    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+    .badge.work { background: #0284c7; color: #fff; }
+    .badge.daily { background: #059669; color: #fff; }
+    .badge.prep { background: #d97706; color: #fff; }
+
+    .context-label { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 8px; line-height: 1.4; }
+    .before-text { color: #f87171; font-size: 0.9rem; text-decoration: line-through; margin-bottom: 12px; }
+    .main-sentence { font-size: 1.35rem; font-weight: 700; line-height: 1.5; color: var(--text); min-height: 64px; }
+    .prep-tip { margin-top: 12px; font-size: 0.9rem; color: var(--highlight); line-height: 1.4; border-left: 3px solid var(--highlight); padding-left: 8px; }
+
+    .car-info { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 12px; }
+
+    .controls { position: sticky; bottom: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
+    .progress-bar-container { width: 100%; height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
+    .progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
+    
+    .status-text { text-align: center; font-size: 0.9rem; color: var(--accent); font-weight: 600; height: 20px; }
+    .button-group { display: flex; gap: 12px; }
+    button { flex: 1; height: 64px; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.1s; }
+    .btn-main { background: var(--accent); color: #0f172a; }
+    .btn-sub { background: #334155; color: var(--text); flex: 0.5; }
+    button:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>말씨와 논리 루틴</h1>
+    <select id="daySelector" onchange="changeDay(this.value)"></select>
+  </header>
+
+  <div class="card" id="displayCard">
+    <div id="categoryBadge" class="badge work">사회생활</div>
+    <div id="contextLabel" class="context-label">상황 로딩 중...</div>
+    <div id="beforeText" class="before-text">기존 투박한 표현</div>
+    <div id="mainSentence" class="main-sentence">화면에 추천 표현이 표시됩니다.</div>
+    <div id="prepTip" class="prep-tip">논리적 말하기 팁</div>
+  </div>
+
+  <div class="car-info">
+    🚗 <b>차량 핸들 리모컨 연동 활성화</b>: 이전 곡 / 다음 곡 버튼으로 문장 탐색 가능
+  </div>
+
+  <div class="controls">
+    <div class="status-text" id="statusLabel">정지됨</div>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="button-group">
+      <button class="btn-sub" onclick="prevItem()">이전</button>
+      <button class="btn-main" id="playBtn" onclick="togglePlay()">전체 재생</button>
+      <button class="btn-sub" onclick="nextItem()">다음</button>
+    </div>
+  </div>
+
+  <!-- 브라우저의 MediaSession 백그라운드 유지를 위한 무음 오디오 -->
+  <audio id="silentAudio" loop playsinline src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
+
+  <script>
+    // 30일치 데이터 정의
+    const workThemes = [
+      ["일정 조율", "무리한 납기 요청 거절", "마감 시점을 이번 주 금요일 오후로 조정하고자 합니다.", "품질 확보 목적 명시"],
+      ["의견 대립", "상대 방식의 위험성 지적", "운영 단계의 병목을 줄이기 위해 B안을 병행 검토하는 것이 안전해 보입니다.", "리스크 예방 프레임"],
+      ["진행 보고", "중간 과정 모호하게 공유", "현재 공정의 70% 완료되었으며, 내일 정오까지 핵심 지표를 공유드리겠습니다.", "수치와 시점 구체화"],
+      ["오류 지적", "동료의 실수 추궁", "최신 사양서 기준과 대조해보니 파라미터 일부에 차이가 있어 재확인 부탁드립니다.", "사람 아닌 기준에 집중"],
+      ["자원 요청", "인력 부족 불평", "안정적인 현장 셋업을 위해 사전 검증 단계에 엔지니어 1분의 협조를 요청드립니다.", "필요 자원 명확화"],
+      ["회의 주도", "주제 이탈 시 개입", "핵심 의제에 집중하기 위해 부가 논의는 메모해두고 세션 말미에 다루겠습니다.", "논점 회귀 리드"],
+      ["협상 방어", "단가 인하 요구 거절", "제안드린 범위 내에서는 현재 수준이 최선이며, 범위 조정 시 단가 재산정이 가능합니다.", "기브앤테이크 조건화"],
+      ["상사 피드백", "방향성 혼선 정리", "지시하신 취지를 바탕으로 A안과 B안의 예상 비용을 비교 정리해 결재 올리겠습니다.", "취지 인정 후 대안 제시"],
+      ["책임 한계", "담당 외 업무 떠안기", "해당 파트는 설계팀 소관이므로 담당 엔지니어와 즉시 미팅을 주선해 드리겠습니다.", "경계 긋기 및 가교 역할"],
+      ["지연 사과", "단순 변명 전달", "검증 중 예상치 못한 변수로 반나절 지연되었습니다. 오늘 18시까지 만회 조치하겠습니다.", "원인과 만회책 동시 제시"]
+    ];
+
+    const dailyThemes = [
+      ["경계 설정", "가족/지인의 참견 방어", "염려해주시는 마음 잘 알겠습니다. 현재 세운 계획대로 차근차근 진행해보겠습니다."],
+      ["약속 거절", "피로 시 거절", "초대해줘서 고마워요. 오늘은 컨디션 조절이 필요해서 다음 주에 제가 먼저 연락할게요."],
+      ["감정 표현", "상대의 연락 두절에 화내기", "연락이 오래 닿지 않으면 혹시 무슨 일이 생긴 건 아닌지 걱정이 많이 돼요."],
+      ["부탁 거절", "무리한 호의 요청 거절", "도움이 되어 드리고 싶지만, 현재 제가 직접 관여하기 어려운 상황이라 양해를 구합니다."],
+      ["식당 요청", "주문 누락 항의", "많이 바쁘신 것 같은데, 저희 주문이 주방에 정상 접수되었는지 확인 한 번 부탁드립니다."],
+      ["칭찬 수용", "과도한 자기비하", "좋게 봐주셔서 감사합니다. 팀원들과 함께 준비한 덕분입니다."],
+      ["소음 항의", "이웃 간 층간소음 지적", "휴식 시간대에 층간 진동이 다소 전달되고 있어 조금만 신경 써주시면 감사하겠습니다."],
+      ["조언 필터링", "불필요한 훈수 넘기기", "그런 관점도 있을 수 있겠네요. 참고하여 신중히 검토해보겠습니다."],
+      ["선약 양해", "갑작스러운 모임 불참", "미리 잡힌 일정이 있어 이번엔 참석이 어렵습니다. 좋은 시간 보내세요."],
+      ["위로 건네기", "섣부른 해결책 제시 대신", "어떤 마음일지 다 헤아리긴 어렵지만, 곁에서 묵묵히 응원하고 있을게요."]
+    ];
+
+    const routineData = [];
+    for (let day = 1; day <= 30; day++) {
+      const wIdx = (day - 1) % workThemes.length;
+      const dIdx = (day - 1) % dailyThemes.length;
+      
+      const dayPlan = { day: day, items: [] };
+
+      // 사회생활 5문장
+      for (let i = 0; i < 5; i++) {
+        const t = workThemes[(wIdx + i) % workThemes.length];
+        dayPlan.items.push({
+          type: "work",
+          badge: "사회생활",
+          context: `상황 ${i+1}: ${t[0]} (${t[1]})`,
+          before: "투박한 표현: 직설적이거나 방어적인 대화 방식",
+          sentence: t[2],
+          tip: `PREP 논리: ${t[3]}`
+        });
+      }
+
+      // 일상생활 5문장
+      for (let i = 0; i < 5; i++) {
+        const t = dailyThemes[(dIdx + i) % dailyThemes.length];
+        dayPlan.items.push({
+          type: "daily",
+          badge: "일상생활",
+          context: `일상 ${i+1}: ${t[0]} (${t[1]})`,
+          before: "투박한 표현: 감정적이거나 서운함이 묻어나는 화법",
+          sentence: t[2],
+          tip: "I-Message: 상대 행동 비난 대신 내 입장과 상태 공유"
+        });
+      }
+
+      // PREP 1문장
+      dayPlan.items.push({
+        type: "prep",
+        badge: "PREP 실전 발화",
+        context: "핵심 의제 설득 (결론-이유-사례-재강조)",
+        before: "두서없는 설명: 배경부터 장황하게 말하기",
+        sentence: `결론부터 말씀드리면 ${day}차 과제는 시뮬레이션 선검증 후 적용해야 합니다. 사후 수정 비용이 3배 이상 발생하기 때문입니다. 실제로 이전 프로젝트에서도 2주의 일정을 단축했습니다. 따라서 사전 가상 검증부터 착수할 것을 제안합니다.`,
+        tip: "Point(결론) -> Reason(이유) -> Example(구체적 수치) -> Point(제안)"
+      });
+
+      routineData.push(dayPlan);
+    }
+
+    let currentDay = 1;
+    let currentIndex = 0;
+    let isPlaying = false;
+    let synth = window.speechSynthesis;
+    let timer = null;
+    const silentAudio = document.getElementById('silentAudio');
+
+    // UI 셀렉터 초기화
+    const daySelector = document.getElementById('daySelector');
+    routineData.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.day;
+      opt.textContent = `Day ${d.day}`;
+      daySelector.appendChild(opt);
+    });
+
+    // MediaSession 정보 및 핸들 리모컨 핸들러 설정
+    function setupMediaSession() {
+      if (!('mediaSession' in navigator)) return;
+
+      const item = routineData[currentDay - 1].items[currentIndex];
+      const total = routineData[currentDay - 1].items.length;
+
+      // 차량 클러스터 / 내비게이션 디스플레이에 노출되는 메타데이터
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: item.sentence,
+        artist: `[${item.badge}] ${item.context}`,
+        album: `말씨와 논리 Day ${currentDay} (${currentIndex + 1}/${total})`,
+        artwork: [
+          { src: 'https://placehold.co/512x512/0f172a/38bdf8.png?text=Voice+Shadowing', sizes: '512x512', type: 'image/png' }
+        ]
+      });
+
+      // 차량 핸들 리모컨 액션 매핑
+      navigator.mediaSession.setActionHandler('play', () => {
+        startRoutine();
+      });
+
+      navigator.mediaSession.setActionHandler('pause', () => {
+        stopRoutine();
+      });
+
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        prevItem();
+      });
+
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        nextItem();
+      });
+    }
+
+    function updateCard(item) {
+      document.getElementById('categoryBadge').className = `badge ${item.type}`;
+      document.getElementById('categoryBadge').innerText = item.badge;
+      document.getElementById('contextLabel').innerText = item.context;
+      document.getElementById('beforeText').innerText = item.before;
+      document.getElementById('mainSentence').innerText = item.sentence;
+      document.getElementById('prepTip').innerText = item.tip;
+      
+      const total = routineData[currentDay - 1].items.length;
+      document.getElementById('progressBar').style.width = `${((currentIndex + 1) / total) * 100}%`;
+
+      // 화면 업데이트 시 차량 오디오 화면도 즉시 동기화
+      setupMediaSession();
+    }
+
+    function changeDay(day) {
+      stopRoutine();
+      currentDay = parseInt(day);
+      currentIndex = 0;
+      updateCard(routineData[currentDay - 1].items[currentIndex]);
+    }
+
+    function togglePlay() {
+      if (isPlaying) {
+        stopRoutine();
+      } else {
+        startRoutine();
+      }
+    }
+
+    function startRoutine() {
+      isPlaying = true;
+      document.getElementById('playBtn').innerText = "일시 정지";
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "playing";
+      }
+      
+      // 모바일 백그라운드 미디어 세션을 유지하기 위해 무음 오디오 재생
+      silentAudio.play().catch(() => {});
+
+      playCurrentItemStep();
+    }
+
+    function stopRoutine() {
+      isPlaying = false;
+      if (synth) synth.cancel();
+      clearTimeout(timer);
+      silentAudio.pause();
+      document.getElementById('playBtn').innerText = "전체 재생";
+      document.getElementById('statusLabel').innerText = "정지됨";
+      
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = "paused";
+      }
+    }
+
+    function playCurrentItemStep() {
+      if (!isPlaying) return;
+
+      const items = routineData[currentDay - 1].items;
+      if (currentIndex >= items.length) {
+        document.getElementById('statusLabel').innerText = "오늘의 루틴 완료!";
+        stopRoutine();
+        return;
+      }
+
+      const item = items[currentIndex];
+      updateCard(item);
+
+      // Step 1: 상황 안내
+      document.getElementById('statusLabel').innerText = "1. 상황 안내 청취 중...";
+      speak(item.context, 1.0, () => {
+        if (!isPlaying) return;
+
+        // Step 2: 핵심 문장 발화
+        document.getElementById('statusLabel').innerText = "2. 표현 듣기";
+        speak(item.sentence, 0.9, () => {
+          if (!isPlaying) return;
+
+          // Step 3: 운전자 섀도잉 발화 대기 (4초 정적)
+          document.getElementById('statusLabel').innerText = "3. 따라 말하세요 (섀도잉)...";
+          timer = setTimeout(() => {
+            if (!isPlaying) return;
+
+            // Step 4: 논리 팁 안내 후 다음 문장 이동
+            document.getElementById('statusLabel').innerText = "4. 논리 팁 청취";
+            speak(item.tip, 1.0, () => {
+              if (!isPlaying) return;
+              currentIndex++;
+              timer = setTimeout(playCurrentItemStep, 1000);
+            });
+          }, 4000);
+        });
+      });
+    }
+
+    function speak(text, rate, onEndCallback) {
+      if (!synth) return;
+      synth.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'ko-KR';
+      utter.rate = rate || 1.0;
+      utter.pitch = 1.0;
+      utter.onend = () => { if (onEndCallback) onEndCallback(); };
+      utter.onerror = () => { if (onEndCallback) onEndCallback(); };
+      synth.speak(utter);
+    }
+
+    function nextItem() {
+      const items = routineData[currentDay - 1].items;
+      if (currentIndex < items.length - 1) {
+        currentIndex++;
+      } else {
+        currentIndex = 0; // 끝까지 가면 처음으로 순환
+      }
+
+      if (isPlaying) {
+        synth.cancel();
+        clearTimeout(timer);
+        playCurrentItemStep();
+      } else {
+        updateCard(items[currentIndex]);
+      }
+    }
+
+    function prevItem() {
+      const items = routineData[currentDay - 1].items;
+      if (currentIndex > 0) {
+        currentIndex--;
+      } else {
+        currentIndex = items.length - 1;
+      }
+
+      if (isPlaying) {
+        synth.cancel();
+        clearTimeout(timer);
+        playCurrentItemStep();
+      } else {
+        updateCard(items[currentIndex]);
+      }
+    }
+
+    // 초기 카드 렌더링
+    updateCard(routineData[0].items[0]);
+  </script>
+</body>
+</html>
