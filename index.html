@@ -3,71 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>말씨와 논리 (차량 핸즈프리 섀도잉)</title>
+  <title>말씨와 논리 (올인원 섀도잉)</title>
   <style>
     :root {
       --bg: #0f172a;
       --card-bg: #1e293b;
+      --card-active: #1e3a5f;
       --accent: #38bdf8;
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --highlight: #facc15;
+      --border: #334155;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 16px; display: flex; flex-direction: column; min-height: 100vh; }
+    body { background-color: var(--bg); color: var(--text); padding: 16px; padding-bottom: 120px; min-height: 100vh; }
     
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    h1 { font-size: 1.25rem; font-weight: 700; color: var(--accent); }
-    select { background: var(--card-bg); color: var(--text); border: 1px solid #334155; padding: 8px 12px; border-radius: 8px; font-size: 1rem; }
+    header { position: sticky; top: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); padding: 10px 0 14px 0; z-index: 50; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 1.15rem; font-weight: 700; color: var(--accent); }
+    select { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); padding: 6px 12px; border-radius: 8px; font-size: 0.95rem; }
 
-    .card { background: var(--card-bg); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); }
-    .badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; margin-bottom: 10px; }
+    /* 재생 모드 토글 바 */
+    .toggle-bar { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border); }
+    .toggle-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .toggle-status { color: var(--accent); font-weight: 700; }
+    
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .3s; border-radius: 26px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: #0284c7; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* 전체 리스트 컨테이너 */
+    .list-container { display: flex; flex-direction: column; gap: 14px; }
+    
+    .card { background: var(--card-bg); border: 2px solid transparent; border-radius: 14px; padding: 16px; transition: all 0.25s ease; cursor: pointer; }
+    .card.active { border-color: var(--accent); background: var(--card-active); box-shadow: 0 0 15px rgba(56, 189, 248, 0.25); }
+
+    .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
     .badge.work { background: #0284c7; color: #fff; }
     .badge.daily { background: #059669; color: #fff; }
     .badge.prep { background: #d97706; color: #fff; }
+    .card-index { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
-    .context-label { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 8px; line-height: 1.4; }
-    .before-text { color: #f87171; font-size: 0.9rem; text-decoration: line-through; margin-bottom: 12px; }
-    .main-sentence { font-size: 1.35rem; font-weight: 700; line-height: 1.5; color: var(--text); min-height: 64px; }
-    .prep-tip { margin-top: 12px; font-size: 0.9rem; color: var(--highlight); line-height: 1.4; border-left: 3px solid var(--highlight); padding-left: 8px; }
+    .context-label { color: #cbd5e1; font-size: 0.9rem; margin-bottom: 6px; font-weight: 500; }
+    .before-text { color: #f87171; font-size: 0.85rem; text-decoration: line-through; margin-bottom: 8px; }
+    .main-sentence { font-size: 1.15rem; font-weight: 700; line-height: 1.45; color: #ffffff; }
+    .prep-tip { margin-top: 10px; font-size: 0.85rem; color: var(--highlight); line-height: 1.35; border-left: 3px solid var(--highlight); padding-left: 8px; }
 
-    .car-info { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: #94a3b8; text-align: center; margin-bottom: 12px; }
-
-    .controls { position: sticky; bottom: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
-    .progress-bar-container { width: 100%; height: 6px; background: #334155; border-radius: 3px; overflow: hidden; }
+    /* 하단 차량 제어 컨트롤러 */
+    .controls { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); padding: 12px 16px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+    .progress-bar-container { width: 100%; height: 5px; background: #334155; border-radius: 3px; overflow: hidden; }
     .progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width 0.3s ease; }
     
-    .status-text { text-align: center; font-size: 0.9rem; color: var(--accent); font-weight: 600; height: 20px; }
-    .button-group { display: flex; gap: 12px; }
-    button { flex: 1; height: 64px; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.1s; }
-    .btn-main { background: var(--accent); color: #0f172a; }
-    .btn-sub { background: #334155; color: var(--text); flex: 0.5; }
+    .status-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; height: 18px; }
+    .status-text { color: var(--accent); font-weight: 600; }
+    .playing-count { color: var(--text-muted); font-size: 0.8rem; }
+
+    .button-group { display: flex; gap: 10px; }
+    button { height: 54px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.1s; }
+    .btn-main { background: var(--accent); color: #0f172a; flex: 1.5; }
+    .btn-sub { background: #334155; color: var(--text); flex: 0.75; }
     button:active { transform: scale(0.98); }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>말씨와 논리 루틴</h1>
-    <select id="daySelector" onchange="changeDay(this.value)"></select>
+    <div class="header-top">
+      <h1>말씨와 논리 루틴</h1>
+      <select id="daySelector" onchange="changeDay(this.value)"></select>
+    </div>
+    
+    <!-- 재생 모드 토글 (Day 반복 vs 다음 Day 자동 진행) -->
+    <div class="toggle-bar">
+      <span class="toggle-label">
+        종료 후 동작: <span id="modeStatusText" class="toggle-status">현재 Day 반복 재생</span>
+      </span>
+      <label class="switch">
+        <input type="checkbox" id="autoNextToggle" onchange="handleModeToggle(this)">
+        <span class="slider"></span>
+      </label>
+    </div>
   </header>
 
-  <div class="card" id="displayCard">
-    <div id="categoryBadge" class="badge work">사회생활</div>
-    <div id="contextLabel" class="context-label">상황 로딩 중...</div>
-    <div id="beforeText" class="before-text">기존 투박한 표현</div>
-    <div id="mainSentence" class="main-sentence">화면에 추천 표현이 표시됩니다.</div>
-    <div id="prepTip" class="prep-tip">논리적 말하기 팁</div>
-  </div>
+  <!-- 하루치 11개 문장 전체 리스트 -->
+  <div class="list-container" id="listContainer"></div>
 
-  <div class="car-info">
-    🚗 <b>차량 핸들 리모컨 연동 활성화</b>: 이전 곡 / 다음 곡 버튼으로 문장 탐색 가능
-  </div>
-
+  <!-- 하단 차량 운전 컨트롤러 -->
   <div class="controls">
-    <div class="status-text" id="statusLabel">정지됨</div>
     <div class="progress-bar-container">
       <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="status-bar">
+      <span class="status-text" id="statusLabel">정지됨</span>
+      <span class="playing-count" id="playingCount">0 / 11</span>
     </div>
     <div class="button-group">
       <button class="btn-sub" onclick="prevItem()">이전</button>
@@ -76,11 +108,9 @@
     </div>
   </div>
 
-  <!-- 브라우저의 MediaSession 백그라운드 유지를 위한 무음 오디오 -->
   <audio id="silentAudio" loop playsinline src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
 
   <script>
-    // 30일치 데이터 정의
     const workThemes = [
       ["일정 조율", "무리한 납기 요청 거절", "마감 시점을 이번 주 금요일 오후로 조정하고자 합니다.", "품질 확보 목적 명시"],
       ["의견 대립", "상대 방식의 위험성 지적", "운영 단계의 병목을 줄이기 위해 B안을 병행 검토하는 것이 안전해 보입니다.", "리스크 예방 프레임"],
@@ -111,7 +141,6 @@
     for (let day = 1; day <= 30; day++) {
       const wIdx = (day - 1) % workThemes.length;
       const dIdx = (day - 1) % dailyThemes.length;
-      
       const dayPlan = { day: day, items: [] };
 
       // 사회생활 5문장
@@ -156,12 +185,15 @@
     let currentDay = 1;
     let currentIndex = 0;
     let isPlaying = false;
+    let isAutoNextDay = false; // 기본값: 현재 Day 반복
     let synth = window.speechSynthesis;
     let timer = null;
     const silentAudio = document.getElementById('silentAudio');
+    const listContainer = document.getElementById('listContainer');
+    const daySelector = document.getElementById('daySelector');
+    const modeStatusText = document.getElementById('modeStatusText');
 
     // UI 셀렉터 초기화
-    const daySelector = document.getElementById('daySelector');
     routineData.forEach(d => {
       const opt = document.createElement('option');
       opt.value = d.day;
@@ -169,14 +201,81 @@
       daySelector.appendChild(opt);
     });
 
-    // MediaSession 정보 및 핸들 리모컨 핸들러 설정
+    // 토글 스위치 변경 핸들러
+    function handleModeToggle(checkbox) {
+      isAutoNextDay = checkbox.checked;
+      if (isAutoNextDay) {
+        modeStatusText.innerText = "다음 Day 자동 진행 ➔";
+        modeStatusText.style.color = "#38bdf8";
+      } else {
+        modeStatusText.innerText = "현재 Day 반복 재생 ↺";
+        modeStatusText.style.color = "#facc15";
+      }
+    }
+
+    function renderDayList() {
+      listContainer.innerHTML = '';
+      const items = routineData[currentDay - 1].items;
+
+      items.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = `card ${idx === currentIndex ? 'active' : ''}`;
+        card.id = `card-${idx}`;
+        card.onclick = () => selectItem(idx);
+
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="badge ${item.type}">${item.badge}</span>
+            <span class="card-index">#${idx + 1}</span>
+          </div>
+          <div class="context-label">${item.context}</div>
+          <div class="before-text">${item.before}</div>
+          <div class="main-sentence">${item.sentence}</div>
+          <div class="prep-tip">${item.tip}</div>
+        `;
+        listContainer.appendChild(card);
+      });
+
+      updateUI();
+    }
+
+    function selectItem(idx) {
+      currentIndex = idx;
+      if (isPlaying) {
+        if (synth) synth.cancel();
+        clearTimeout(timer);
+        playCurrentItemStep();
+      } else {
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      const items = routineData[currentDay - 1].items;
+      
+      items.forEach((_, idx) => {
+        const c = document.getElementById(`card-${idx}`);
+        if (c) {
+          if (idx === currentIndex) {
+            c.classList.add('active');
+            c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } else {
+            c.classList.remove('active');
+          }
+        }
+      });
+
+      document.getElementById('playingCount').innerText = `${currentIndex + 1} / ${items.length}`;
+      document.getElementById('progressBar').style.width = `${((currentIndex + 1) / items.length) * 100}%`;
+      setupMediaSession();
+    }
+
     function setupMediaSession() {
       if (!('mediaSession' in navigator)) return;
 
       const item = routineData[currentDay - 1].items[currentIndex];
       const total = routineData[currentDay - 1].items.length;
 
-      // 차량 클러스터 / 내비게이션 디스플레이에 노출되는 메타데이터
       navigator.mediaSession.metadata = new MediaMetadata({
         title: item.sentence,
         artist: `[${item.badge}] ${item.context}`,
@@ -186,44 +285,19 @@
         ]
       });
 
-      // 차량 핸들 리모컨 액션 매핑
-      navigator.mediaSession.setActionHandler('play', () => {
-        startRoutine();
-      });
-
-      navigator.mediaSession.setActionHandler('pause', () => {
-        stopRoutine();
-      });
-
-      navigator.mediaSession.setActionHandler('previoustrack', () => {
-        prevItem();
-      });
-
-      navigator.mediaSession.setActionHandler('nexttrack', () => {
-        nextItem();
-      });
-    }
-
-    function updateCard(item) {
-      document.getElementById('categoryBadge').className = `badge ${item.type}`;
-      document.getElementById('categoryBadge').innerText = item.badge;
-      document.getElementById('contextLabel').innerText = item.context;
-      document.getElementById('beforeText').innerText = item.before;
-      document.getElementById('mainSentence').innerText = item.sentence;
-      document.getElementById('prepTip').innerText = item.tip;
-      
-      const total = routineData[currentDay - 1].items.length;
-      document.getElementById('progressBar').style.width = `${((currentIndex + 1) / total) * 100}%`;
-
-      // 화면 업데이트 시 차량 오디오 화면도 즉시 동기화
-      setupMediaSession();
+      navigator.mediaSession.setActionHandler('play', startRoutine);
+      navigator.mediaSession.setActionHandler('pause', stopRoutine);
+      navigator.mediaSession.setActionHandler('previoustrack', prevItem);
+      navigator.mediaSession.setActionHandler('nexttrack', nextItem);
     }
 
     function changeDay(day) {
       stopRoutine();
       currentDay = parseInt(day);
+      daySelector.value = currentDay;
       currentIndex = 0;
-      updateCard(routineData[currentDay - 1].items[currentIndex]);
+      renderDayList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function togglePlay() {
@@ -237,13 +311,8 @@
     function startRoutine() {
       isPlaying = true;
       document.getElementById('playBtn').innerText = "일시 정지";
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = "playing";
-      }
-      
-      // 모바일 백그라운드 미디어 세션을 유지하기 위해 무음 오디오 재생
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "playing";
       silentAudio.play().catch(() => {});
-
       playCurrentItemStep();
     }
 
@@ -254,41 +323,53 @@
       silentAudio.pause();
       document.getElementById('playBtn').innerText = "전체 재생";
       document.getElementById('statusLabel').innerText = "정지됨";
-      
-      if ('mediaSession' in navigator) {
-        navigator.mediaSession.playbackState = "paused";
-      }
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
     }
 
     function playCurrentItemStep() {
       if (!isPlaying) return;
 
       const items = routineData[currentDay - 1].items;
+
+      // 11개 문장이 모두 끝났을 때의 분기 처리
       if (currentIndex >= items.length) {
-        document.getElementById('statusLabel').innerText = "오늘의 루틴 완료!";
-        stopRoutine();
-        return;
+        if (isAutoNextDay) {
+          // [다음 Day 자동 진행] 모드
+          currentDay = (currentDay < 30) ? currentDay + 1 : 1;
+          daySelector.value = currentDay;
+          currentIndex = 0;
+          renderDayList();
+          document.getElementById('statusLabel').innerText = `Day ${currentDay}로 이동하여 재생합니다.`;
+          timer = setTimeout(playCurrentItemStep, 1500);
+          return;
+        } else {
+          // [현재 Day 반복] 모드
+          currentIndex = 0;
+          document.getElementById('statusLabel').innerText = `Day ${currentDay} 처음부터 다시 반복합니다.`;
+          timer = setTimeout(playCurrentItemStep, 1500);
+          return;
+        }
       }
 
+      updateUI();
       const item = items[currentIndex];
-      updateCard(item);
 
-      // Step 1: 상황 안내
-      document.getElementById('statusLabel').innerText = "1. 상황 안내 청취 중...";
+      // 1. 상황 안내
+      document.getElementById('statusLabel').innerText = "1. 상황 듣기";
       speak(item.context, 1.0, () => {
         if (!isPlaying) return;
 
-        // Step 2: 핵심 문장 발화
+        // 2. 핵심 추천 표현
         document.getElementById('statusLabel').innerText = "2. 표현 듣기";
         speak(item.sentence, 0.9, () => {
           if (!isPlaying) return;
 
-          // Step 3: 운전자 섀도잉 발화 대기 (4초 정적)
-          document.getElementById('statusLabel').innerText = "3. 따라 말하세요 (섀도잉)...";
+          // 3. 섀도잉 발화 대기 (4초)
+          document.getElementById('statusLabel').innerText = "3. 따라 말하세요 (4초)";
           timer = setTimeout(() => {
             if (!isPlaying) return;
 
-            // Step 4: 논리 팁 안내 후 다음 문장 이동
+            // 4. 논리 팁 청취
             document.getElementById('statusLabel').innerText = "4. 논리 팁 청취";
             speak(item.tip, 1.0, () => {
               if (!isPlaying) return;
@@ -317,7 +398,14 @@
       if (currentIndex < items.length - 1) {
         currentIndex++;
       } else {
-        currentIndex = 0; // 끝까지 가면 처음으로 순환
+        if (isAutoNextDay) {
+          currentDay = (currentDay < 30) ? currentDay + 1 : 1;
+          daySelector.value = currentDay;
+          currentIndex = 0;
+          renderDayList();
+        } else {
+          currentIndex = 0;
+        }
       }
 
       if (isPlaying) {
@@ -325,7 +413,7 @@
         clearTimeout(timer);
         playCurrentItemStep();
       } else {
-        updateCard(items[currentIndex]);
+        updateUI();
       }
     }
 
@@ -342,12 +430,12 @@
         clearTimeout(timer);
         playCurrentItemStep();
       } else {
-        updateCard(items[currentIndex]);
+        updateUI();
       }
     }
 
-    // 초기 카드 렌더링
-    updateCard(routineData[0].items[0]);
+    // 초기 렌더링
+    renderDayList();
   </script>
 </body>
 </html>
