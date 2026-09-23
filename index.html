@@ -50,19 +50,16 @@
     .card-index { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
 
     .context-label { color: var(--accent); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
-    .background-desc { font-size: 0.85rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 6px; }
+    .background-desc { font-size: 0.85rem; color: #cbd5e1; line-height: 1.45; margin-bottom: 12px; background: rgba(0,0,0,0.25); padding: 8px 10px; border-radius: 6px; border-left: 3px solid #38bdf8; }
 
-    /* 다이얼로그 대화창 UI */
-    .dialogue-box { background: var(--dialogue-bg); border: 1px solid #1e293b; border-radius: 8px; padding: 10px; margin-bottom: 12px; font-size: 0.88rem; line-height: 1.5; }
-    .dialogue-line { margin-bottom: 4px; display: flex; gap: 6px; }
+    /* 다이얼로그 박스 */
+    .dialogue-box { background: var(--dialogue-bg); border: 1px solid #1e293b; border-radius: 8px; padding: 10px; margin-bottom: 10px; font-size: 0.88rem; line-height: 1.5; }
+    .dialogue-line { margin-bottom: 6px; display: flex; gap: 6px; }
     .dialogue-line:last-child { margin-bottom: 0; }
     .speaker-other { color: #f87171; font-weight: 700; flex-shrink: 0; }
     .speaker-me { color: var(--accent); font-weight: 700; flex-shrink: 0; }
     .speech-bubble { color: #e2e8f0; }
 
-    .main-section { border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 6px; }
-    .main-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
-    .main-sentence { font-size: 1.15rem; font-weight: 700; line-height: 1.45; color: #ffffff; }
     .prep-tip { margin-top: 10px; font-size: 0.85rem; color: var(--highlight); line-height: 1.35; border-left: 3px solid var(--highlight); padding-left: 8px; }
 
     /* 하단 차량 제어 컨트롤러 */
@@ -120,154 +117,152 @@
   <audio id="silentAudio" loop playsinline src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA="></audio>
 
   <script>
-    // 배경과 대화가 포함된 테마 데이터베이스
     const workThemes = [
       {
         theme: "일정 조율",
-        bg: "상대방이 불가능한 일정을 요구할 때 감정적으로 거절하면 '비협조적'이라는 인상을 줍니다. 품질 확보를 이유로 대안 날짜를 확정해 주면 전문적인 태도로 인식됩니다.",
+        bg: "상대방이 불가능한 일정을 요구할 때 감정적으로 거절하면 비협조적이라는 인상을 줍니다. 품질 확보를 이유로 대안 날짜를 확정해 주면 전문적인 태도로 인식됩니다.",
         otherText: "책임님, 이 기능 내일까지 무조건 테스트 끝내고 올려주셔야 합니다.",
         myText: "요청하신 완성도를 확보하기 위해, 마감 시점을 이번 주 금요일 오후로 조정하고자 합니다.",
         tip: "Point(대안 일정)를 먼저 제시하고 Reason(품질 확보)을 덧붙이세요."
       },
       {
         theme: "의견 대립",
-        bg: "상대방의 논리를 '틀렸다'고 지적하면 방어 기제가 발동합니다. 의도를 수용한 뒤 운영상의 위험을 회피하기 위한 대안으로 프레임을 짜야 설득됩니다.",
+        bg: "상대방의 방식을 틀렸다고 지적하면 방어 기제가 발동합니다. 의도를 수용한 뒤 운영상의 위험을 회피하기 위한 대안으로 프레임을 짜야 설득됩니다.",
         otherText: "구조 복잡하게 만들지 말고 그냥 A방식으로 일괄 배포하죠?",
         myText: "말씀해주신 방향도 유효하나, 운영 단계의 병목을 줄이기 위해 B안을 병행 검토하는 것이 안전해 보입니다.",
         tip: "상대 의견의 유효성을 1초 인정(Yes)한 뒤 안전한 대안(But/And)을 얹으세요."
       },
       {
         theme: "진행 보고",
-        bg: "단순히 '하고 있습니다'라는 보고는 상사나 협업자에게 불안감을 줍니다. 객관적인 수치와 납기 시점을 먼저 못 박아야 신뢰가 쌓입니다.",
+        bg: "단순히 하고 있다는 식의 보고는 상사나 협업자에게 불안감을 줍니다. 객관적인 수치와 납기 시점을 먼저 못 박아야 신뢰가 쌓입니다.",
         otherText: "그 작업 지금 어디까지 됐습니까?",
         myText: "현재 공정의 약 70% 완료되었으며, 내일 정오까지 핵심 지표를 정리하여 공유드리겠습니다.",
         tip: "수치(70%)와 명확한 시점(내일 12시)이 불필요한 마이크로매니징을 막습니다."
       },
       {
         theme: "오류 지적",
-        bg: "작업자의 태만이나 실수를 추궁하면 감정 싸움이 됩니다. 사람이 아니라 '문서와 데이터'라는 제3의 기준을 대조하는 화법을 씁니다.",
+        bg: "작업자의 태만이나 실수를 추궁하면 감정 싸움이 됩니다. 사람이 아니라 문서와 데이터라는 객관적 기준을 대조하는 화법을 씁니다.",
         otherText: "이거 데이터 지난번이랑 값이 다른 것 같은데요?",
         myText: "최신 사양서 기준과 대조해보니 파라미터 일부에 차이가 있어 재확인 부탁드립니다.",
-        tip: "'네가 틀렸다' 대신 '기준과 차이가 있다'는 객관적 팩트만 전달하세요."
+        tip: "네가 틀렸다 대신 기준과 차이가 있다는 객관적 사실만 전달하세요."
       },
       {
         theme: "자원 요청",
-        bg: "'일이 너무 많다'는 불평은 핑계로 들리기 쉽습니다. 프로젝트의 최종 성공을 담보하기 위한 구체적인 인력과 투입 기간을 산정해 요구해야 합니다.",
+        bg: "일이 너무 많다는 불평은 핑계로 들리기 쉽습니다. 프로젝트의 최종 성공을 담보하기 위한 구체적인 인력과 투입 기간을 산정해 요구해야 합니다.",
         otherText: "이번 달 말까지 현장 설치 마무리 가능한 거죠?",
         myText: "안정적인 현장 셋업을 위해, 사전 검증 단계에 엔지니어 1분의 협조를 요청드리고자 합니다.",
-        tip: "요청 목적(일정 확보) + 특정 자원(엔지니어 1명)을 명확하게 규정하세요."
+        tip: "요청 목적(일정 확보)과 특정 자원(엔지니어 1명)을 명확하게 규정하세요."
       },
       {
         theme: "회의 주도",
-        bg: "회의가 옆길로 샐 때 말을 자르면 무례해 보일 수 있습니다. 발언의 가치는 존중하되, 현재 아젠다에 우선순위를 두는 원칙을 환기합니다.",
-        otherText: "아 그런데 다른 장비 통신 프로토콜 문제도 지금 같이 얘기해봐야 하지 않나요?",
+        bg: "회의가 옆길로 샐 때 말을 자르면 무례해 보일 수 있습니다. 발언의 가치는 존중하되 현재 아젠다에 집중하는 원칙을 환기합니다.",
+        otherText: "다른 장비 통신 프로토콜 문제도 지금 같이 얘기해봐야 하지 않나요?",
         myText: "중요한 이슈이나 핵심 의제에 집중하기 위해, 메모해두고 세션 말미에 다루겠습니다.",
-        tip: "의제의 가치를 인정하고 다룰 시점(세션 말미)을 분리 지정하세요."
+        tip: "의제의 가치를 인정하고 다룰 시점을 세션 말미로 분리 지정하세요."
       },
       {
         theme: "협상 방어",
         bg: "일방적으로 단가를 깎으려는 요청에 그냥 거절하면 협상이 깨집니다. 단가를 낮추려면 납품 스펙도 함께 줄어든다는 원칙을 제시해야 합니다.",
         otherText: "예산이 부족해서 견적에서 15% 정도는 맞춰주셔야 진행 가능합니다.",
         myText: "제안드린 범위 내에서는 현재 수준이 최선이며, 범위를 조정해주시면 단가 재산정이 가능합니다.",
-        tip: "조건 없는 양보는 없습니다. '스펙 조정 = 단가 조정'이라는 기브앤테이크를 고수하세요."
+        tip: "조건 없는 양보는 없습니다. 스펙 조정 시 단가 재산정이라는 원칙을 고수하세요."
       },
       {
         theme: "상사 피드백",
-        bg: "상사의 지시가 현실과 맞지 않을 때 정면 반박하기보다, 지시의 본래 취지를 살리는 복수 안의 비용/리스크를 비교해 선택권을 줍니다.",
+        bg: "상사의 지시가 현실과 맞지 않을 때 정면 반박하기보다, 지시의 취지를 살리는 복수 안의 비용과 리스크를 비교해 선택권을 줍니다.",
         otherText: "이 알고리즘 말고 아예 다른 오픈소스 구조로 싹 바꿔보는 건 어때요?",
         myText: "지시하신 취지를 바탕으로, 기존 방식 보완안과 신규 전환안의 예상 공수를 비교해 보고드리겠습니다.",
-        tip: "거부하지 않고 '선택지별 공수 비교'를 보고서 형태로 만들어 결정권을 넘깁니다."
+        tip: "거부하지 않고 선택지별 공수 비교 보고서로 결정권을 넘깁니다."
       },
       {
         theme: "책임 한계",
-        bg: "내 업무가 아닌 일을 무조건 쳐내면 냉정해 보이고, 다 떠안으면 본업에 차질이 생깁니다. 선을 긋되 해결 경로(가교)를 안내해줍니다.",
+        bg: "내 업무가 아닌 일을 무조건 쳐내면 냉정해 보이고, 다 떠안으면 본업에 차질이 생깁니다. 선을 긋되 해결 경로를 안내해줍니다.",
         otherText: "이 에러 로그 해석 좀 바로 해주실 수 있나요?",
         myText: "해당 파트는 제어팀 전담 소관이므로, 담당 엔지니어와 빠르게 연결될 수 있도록 주선해 드리겠습니다.",
-        tip: "경계 긋기(제어팀 소관) + 대안 지원(미팅 주선)을 세트로 전달하세요."
+        tip: "경계 긋기(제어팀 소관)와 대안 지원(미팅 주선)을 세트로 전달하세요."
       },
       {
         theme: "지연 사과",
-        bg: "납기 지연 시 변명을 길게 늘어놓는 것은 가장 최악입니다. 원인은 핵심만 담백하게 밝히고, 언제까지 복구할 것인지 만회 일정을 제시해야 합니다.",
+        bg: "납기 지연 시 변명을 길게 늘어놓는 것은 최악입니다. 원인은 담백하게 밝히고, 언제까지 복구할 것인지 만회 일정을 제시해야 합니다.",
         otherText: "오늘 오전 중으로 오기로 했던 리포트가 아직 안 들어왔네요?",
         myText: "검증 중 장비 통신 변수로 반나절 지연되었습니다. 오늘 18시까지 만회하여 송부드리겠습니다.",
-        tip: "변명 생략 + 명확한 원인(통신 변수) + 구체적 만회 시점(오늘 18시)."
+        tip: "변명 생략, 명확한 원인, 그리고 구체적 만회 시점을 제시하세요."
       }
     ];
 
     const dailyThemes = [
       {
         theme: "경계 설정",
-        bg: "가족이나 지인의 참견에 감정적으로 화를 내면 관계가 틀어집니다. 상대의 염려하는 감정만 흡수하고 결정은 내게 있음을 차분히 밝힙니다.",
+        bg: "가족이나 지인의 참견에 감정적으로 화를 내면 관계가 틀어집니다. 상대의 염려하는 감정만 흡수하고 결정권은 내게 있음을 차분히 밝힙니다.",
         otherText: "너 그거 그렇게 해서 언제 자리 잡으려고 그래? 내 말대로 해.",
         myText: "염려해주시는 마음 잘 알고 있어요. 현재 세운 계획대로 차근차근 진행해볼게요.",
-        tip: "상대의 의도 인정('염려 고마워요') + 주도권 유지('내 계획대로 진행')."
+        tip: "상대의 의도 인정과 내 계획 중심의 주도권 유지 화법입니다."
       },
       {
         theme: "약속 거절",
-        bg: "'피곤해서 안 나가'라고 하면 상대가 무안해집니다. 상대를 만나고 싶은 마음과 현재 내 물리적 에너지를 분리해서 말해야 서운함이 없습니다.",
+        bg: "피곤해서 안 나간다고 직설적으로 말하면 상대가 무안해집니다. 상대를 만나고 싶은 마음과 현재 내 에너지를 분리해서 말해야 서운함이 없습니다.",
         otherText: "오늘 저녁에 동네에서 가볍게 한잔할래?",
         myText: "불러줘서 정말 고마워요. 오늘은 컨디션 조절이 필요해서, 다음 주에 제가 먼저 연락할게요.",
-        tip: "초대 감사 + 거절 이유 + 다음 약속의 주도권 제시."
+        tip: "초대 감사 표현과 함께 다음 약속의 주도권을 직접 제시하세요."
       },
       {
         theme: "감정 표현 (I-Message)",
-        bg: "'너는 왜 매번 그러냐'는 식의 You-Message는 상대를 방어적으로 만듭니다. 상대의 행동 대신 '내 걱정과 감정'에 집중해 표현합니다.",
+        bg: "너는 왜 매번 그러냐는 식의 비난은 상대를 방어적으로 만듭니다. 상대의 행동 대신 내 걱정과 감정에 집중해 표현합니다.",
         otherText: "아 바빠서 연락 깜빡했어. 뭘 그런 걸로 그래?",
         myText: "연락이 오래 닿지 않으면 혹시 무슨 일이 생긴 건 아닌지 걱정이 많이 돼요.",
-        tip: "상대의 성격 비난 대신 '내 감정 상태'만 담담히 알리세요."
+        tip: "상대의 태도 대신 내 감정 상태만 담담히 알리세요."
       },
       {
         theme: "부탁 거절",
-        bg: "애매하게 여지를 두면 나중에 더 곤란해집니다. 도와주고 싶은 인간적인 마음을 표현하되, 능력 밖의 일임을 명확히 선 긋는 것이 깔끔합니다.",
+        bg: "애매하게 여지를 두면 나중에 더 곤란해집니다. 도와주고 싶은 마음을 표현하되, 능력 밖의 일임을 명확히 선 긋는 것이 상대를 배려하는 길입니다.",
         otherText: "이번 건 너가 아는 사람 통해서 한 번만 힘 좀 써주면 안 될까?",
         myText: "도움이 되어 드리고 싶지만, 현재 제가 직접 관여하기 어려운 상황이라 양해를 구합니다.",
-        tip: "마음의 공감 + 단호한 한계 명시."
+        tip: "인간적 공감과 단호한 한계 명시를 병행하세요."
       },
       {
         theme: "식당/서비스 요청",
-        bg: "'왜 아직도 안 나와요?'라고 따지면 서비스 직원의 반발심을 삽니다. 바쁜 상황을 먼저 헤아려주면 오히려 미안함을 느껴 즉시 챙겨줍니다.",
-        otherText: "(주문한 지 30분이 지났으나 음식이 나오지 않는 상황)",
+        bg: "왜 아직 안 나오냐고 따지면 반발심을 삽니다. 바쁜 상황을 먼저 헤아려주면 오히려 미안함을 느껴 즉시 챙겨줍니다.",
+        otherText: "주문하신 메뉴 확인 중입니다. 잠시만 기다려주세요.",
         myText: "많이 바쁘신 것 같은데, 저희 주문이 주방에 정상 접수되었는지 확인 한 번 부탁드립니다.",
-        tip: "상황 인정('바쁘신 것 같은데') + 팩트 점검 요청."
+        tip: "상황 인정과 함께 팩트 점검을 요청하세요."
       },
       {
         theme: "칭찬 수용",
-        bg: "칭찬에 지나치게 손사래를 치며 자학하는 것은 겸손이 아닙니다. 감사히 받고 팀이나 협력자에게 공을 돌릴 때 가장 성숙해 보입니다.",
+        bg: "칭찬에 과도하게 손사래를 치는 것은 겸손이 아닙니다. 감사히 받고 팀이나 협력자에게 공을 돌릴 때 가장 성숙해 보입니다.",
         otherText: "이번 발표 정말 완벽했어요. 완전 핵심 인재시네요!",
         myText: "좋게 봐주셔서 감사합니다. 팀원들이 데이터를 꼼꼼히 챙겨준 덕분입니다.",
-        tip: "감사 표현 + 협력자에게 공 돌리기."
+        tip: "감사 표현 후 협력자에게 공을 돌리세요."
       },
       {
         theme: "소음/불편 항의",
-        bg: "이웃 간 감정싸움은 '당신 때문에 피해를 보고 있다'는 공격성에서 시작됩니다. 현상 자체(진동 전달)만 객관적으로 알리고 배려를 구합니다.",
-        otherText: "(밤늦게 위층에서 쿵쾅거리는 소음이 지속되는 상황)",
+        bg: "이웃 간 감정싸움은 공격성에서 시작됩니다. 고의성을 탓하지 않고 진동 전달 현상 자체만 객관적으로 알리고 배려를 구합니다.",
+        otherText: "밤늦게 위층에서 쿵쾅거리는 소음이 지속되는 상황입니다.",
         myText: "휴식 시간대에 층간 진동이 다소 전달되고 있어, 조금만 신경 써주시면 감사하겠습니다.",
-        tip: "상대의 고의성을 탓하지 않고 전달 현상만 조용히 알립니다."
+        tip: "상대를 비난하지 않고 현상 전달과 배려를 요청합니다."
       },
       {
         theme: "불필요한 훈수 넘기기",
-        bg: "지나가는 참견에 일일이 반박하면 논쟁만 길어집니다. 맞서 싸우지 않고 '하나의 의견으로 듣겠다'며 가볍게 흘려보냅니다.",
+        bg: "지나가는 참견에 일일이 반박하면 논쟁만 길어집니다. 맞서 싸우지 않고 하나의 의견으로 듣겠다며 가볍게 흘려보냅니다.",
         otherText: "요즘 차는 그렇게 관리하면 안 돼. 내 말 듣고 이렇게 바꿔봐.",
         myText: "그런 관점도 있을 수 있겠네요. 참고하여 신중히 검토해보겠습니다.",
-        tip: "동의가 아닌 '인지'만 하고 넘어가는 화법."
+        tip: "동의가 아닌 인지만 하고 넘어가는 유연한 화법입니다."
       },
       {
         theme: "선약 양해 구하기",
-        bg: "갑작스러운 불참 통보는 상세한 핑계를 댈수록 변명처럼 느껴집니다. 선약이 있음을 담백하게 알리고 모임의 즐거움을 빌어주는 것이 정석입니다.",
+        bg: "갑작스러운 불참 통보는 사유가 길수록 변명처럼 느껴집니다. 선약이 있음을 담백하게 알리고 모임의 즐거움을 빌어주는 것이 정석입니다.",
         otherText: "이번 주말 동기 모임 다 모이기로 했는데 올 수 있지?",
         myText: "미리 잡힌 선약이 있어 이번엔 참석이 어렵습니다. 다들 좋은 시간 보내세요.",
-        tip: "장황한 사유 배제 + 단호한 선약 언급 + 따뜻한 덕담."
+        tip: "장황한 사유 배제, 선약 언급, 따뜻한 덕담으로 마무리하세요."
       },
       {
         theme: "위로 건네기",
-        bg: "힘든 일을 겪은 사람에게 섣부른 조언이나 해결책 제시는 2차 상처가 됩니다. 감히 다 알 수 없다는 겸손과 묵묵한 지지가 최고의 위로입니다.",
-        otherText: "나 이번에 준비하던 거 다 무산됐어... 진짜 막막하다.",
+        bg: "힘든 일을 겪은 사람에게 섣부른 조언이나 해결책 제시는 상처가 됩니다. 다 알 수 없다는 겸손과 묵묵한 지지가 최고의 위로입니다.",
+        otherText: "나 이번에 준비하던 거 다 무산됐어. 진짜 막막하다.",
         myText: "어떤 마음일지 다 헤아리긴 어렵지만, 곁에서 묵묵히 응원하고 있을게요.",
-        tip: "섣부른 해결책 평가 금지 + 존재 자체로서의 지지 표명."
+        tip: "섣부른 해결책 대신 존재 자체로서의 지지를 전하세요."
       }
     ];
 
-    // 30일치 데이터 동적 빌드
     const routineData = [];
     for (let day = 1; day <= 30; day++) {
       const wIdx = (day - 1) % workThemes.length;
@@ -308,7 +303,7 @@
         badge: "PREP 실전 발화",
         theme: `핵심 의제 설득 (Day ${day})`,
         bg: "장황한 서론 대신 결론부터 제시하고 구체적인 수치로 입증하는 비즈니스 논리 구조입니다.",
-        other: "팀장: 다음 분기 장비 검증 방식에 대해 각자 의견 간략히 내보세요.",
+        other: "다음 분기 장비 검증 방식에 대해 각자 의견 간략히 제시해 주시기 바랍니다.",
         sentence: `결론부터 말씀드리면 ${day}차 과제는 시뮬레이션 선검증 후 현장 적용해야 합니다. 사후 수정 비용이 3배 이상 발생하기 때문입니다. 실제로 이전 현장에서도 2주의 일정을 단축했습니다. 따라서 사전 가상 검증부터 착수할 것을 제안합니다.`,
         tip: "Point(결론) -> Reason(이유) -> Example(구체적 수치) -> Point(제안)"
       });
@@ -321,11 +316,33 @@
     let isPlaying = false;
     let isAutoNextDay = false;
     let synth = window.speechSynthesis;
+    let availableVoices = [];
+    let maleVoice = null;
+    let femaleVoice = null;
     let timer = null;
     const silentAudio = document.getElementById('silentAudio');
     const listContainer = document.getElementById('listContainer');
     const daySelector = document.getElementById('daySelector');
     const modeStatusText = document.getElementById('modeStatusText');
+
+    // 기기 내 한국어 보이스 로드 및 남/녀 음성 분리 감지
+    function loadVoices() {
+      if (!synth) return;
+      availableVoices = synth.getVoices().filter(v => v.lang.startsWith('ko'));
+      
+      // 목소리 이름 기반 남/녀 보이스 자동 분기 매핑
+      maleVoice = availableVoices.find(v => v.name.includes('Male') || v.name.includes('남') || v.name.includes('David') || v.name.includes('InJoon')) || null;
+      femaleVoice = availableVoices.find(v => v.name.includes('Female') || v.name.includes('여') || v.name.includes('Heami') || v.name.includes('SunHi') || v.name.includes('Yuna')) || null;
+      
+      // 별도 음성이 없을 경우 첫 번째 보이스를 기본 사용
+      if (!femaleVoice && availableVoices.length > 0) femaleVoice = availableVoices[0];
+      if (!maleVoice && availableVoices.length > 1) maleVoice = availableVoices[1];
+    }
+
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    loadVoices();
 
     routineData.forEach(d => {
       const opt = document.createElement('option');
@@ -469,7 +486,7 @@
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = "paused";
     }
 
-    // 운전 중 청취 루틴: 상황 -> 상대 말 -> 내 답변 -> 4초 섀도잉 발화 -> 논리 팁
+    // 운전 중 전체 오디오 훈련 파이프라인
     function playCurrentItemStep() {
       if (!isPlaying) return;
 
@@ -495,40 +512,74 @@
       updateUI();
       const item = items[currentIndex];
 
-      // 1. 상황 안내
-      document.getElementById('statusLabel').innerText = "1. 상황 및 상대방 발언";
-      speak(`${item.theme}. 상대방의 말. ${item.other}`, 1.0, () => {
+      // 1. 상황 안내 & 배경 설명 TTS (내레이션 톤)
+      document.getElementById('statusLabel').innerText = "1. 상황 및 배경 청취 중...";
+      speakNarration(`${item.theme}. ${item.bg}`, () => {
         if (!isPlaying) return;
 
-        // 2. 나의 세련된 답변 청취
-        document.getElementById('statusLabel').innerText = "2. 나의 답변 듣기";
-        speak(item.sentence, 0.9, () => {
+        // 1초 쉬고 상대방 발화 시작
+        timer = setTimeout(() => {
           if (!isPlaying) return;
 
-          // 3. 운전자 직접 발화 (4초 섀도잉 무음 대기)
-          document.getElementById('statusLabel').innerText = "3. 소리 내어 따라 말하세요 (4초)";
-          timer = setTimeout(() => {
+          // 2. 상대방 발언 TTS (남성/저음 톤)
+          document.getElementById('statusLabel').innerText = "2. 상대방 발언";
+          speakOther(`상대방. ${item.other}`, () => {
             if (!isPlaying) return;
 
-            // 4. 논리 팁 청취 후 다음으로 이동
-            document.getElementById('statusLabel').innerText = "4. 논리 팁 청취";
-            speak(item.tip, 1.0, () => {
+            // 상대 발언 끝난 후 1.5초 멈춤(Pause)
+            document.getElementById('statusLabel').innerText = "상대 발언 종료 (1.5초 대기)...";
+            timer = setTimeout(() => {
               if (!isPlaying) return;
-              currentIndex++;
-              timer = setTimeout(playCurrentItemStep, 1000);
-            });
-          }, 4000);
-        });
+
+              // 3. 나의 세련된 답변 TTS (차분한 표준/여성 톤)
+              document.getElementById('statusLabel').innerText = "3. 나의 답변 청취";
+              speakMe(`나의 답변. ${item.sentence}`, () => {
+                if (!isPlaying) return;
+
+                // 4. 운전자 직접 발화 (4초 섀도잉 무음 대기)
+                document.getElementById('statusLabel').innerText = "4. 소리 내어 따라 말하세요 (4초)";
+                timer = setTimeout(() => {
+                  if (!isPlaying) return;
+
+                  // 5. 논리 팁 청취
+                  document.getElementById('statusLabel').innerText = "5. 논리 팁 청취";
+                  speakNarration(`논리 팁. ${item.tip}`, () => {
+                    if (!isPlaying) return;
+                    currentIndex++;
+                    timer = setTimeout(playCurrentItemStep, 1200);
+                  });
+                }, 4000);
+              });
+            }, 1500); // 1.5초 간격
+          });
+        }, 800);
       });
     }
 
-    function speak(text, rate, onEndCallback) {
+    // 내레이션 음성 (중립 톤)
+    function speakNarration(text, onEnd) {
+      speak(text, { rate: 1.0, pitch: 1.0, voice: femaleVoice }, onEnd);
+    }
+
+    // 상대방 음성 (남성 보이스 / 저음 톤: pitch 0.75)
+    function speakOther(text, onEnd) {
+      speak(text, { rate: 0.95, pitch: 0.75, voice: maleVoice || femaleVoice }, onEnd);
+    }
+
+    // 나의 답변 음성 (명료하고 단호한 톤: pitch 1.05)
+    function speakMe(text, onEnd) {
+      speak(text, { rate: 0.9, pitch: 1.05, voice: femaleVoice || maleVoice }, onEnd);
+    }
+
+    function speak(text, options, onEndCallback) {
       if (!synth) return;
       synth.cancel();
       const utter = new SpeechSynthesisUtterance(text);
       utter.lang = 'ko-KR';
-      utter.rate = rate || 1.0;
-      utter.pitch = 1.0;
+      utter.rate = options.rate || 1.0;
+      utter.pitch = options.pitch || 1.0;
+      if (options.voice) utter.voice = options.voice;
+
       utter.onend = () => { if (onEndCallback) onEndCallback(); };
       utter.onerror = () => { if (onEndCallback) onEndCallback(); };
       synth.speak(utter);
